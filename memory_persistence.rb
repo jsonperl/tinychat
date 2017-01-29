@@ -1,6 +1,10 @@
-class Persistence
+class MemoryPersistence
   def initialize
     @msgs = []
+  end
+
+  def connect
+    #noop
   end
 
   def on_receipt(&block)
@@ -9,7 +13,6 @@ class Persistence
 
   def add_message(msg)
     @msgs << msg
-    puts msg
     message_received(msg)
   end
 

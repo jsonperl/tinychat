@@ -3,7 +3,7 @@ require "socket"
 require "json"
 
 PORTS = [2428, 2429]
-MSGWAIT = 0.05
+MSGWAIT = 0.5
 
 Test::Unit.at_start do
   @pids = PORTS.map{ |port| Process.spawn("PORT=#{port} ruby tinychat.rb") }

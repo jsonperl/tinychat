@@ -2,17 +2,22 @@
 require "rubygems"
 require "eventmachine"
 require "yajl/yajl"
-require_relative "persistence"
+require_relative "memory_persistence"
+require_relative "redis_persistence"
 
-module TinyChat
+class TinyChat < EM::Connection
   # On a concurrent platform, we'd need to protect @@clients with a mutex.
   # This implementation using a reactor (Eventmachine) is very fast
   # but can be assumed to be constrained by Ruby's GIL, so we know
   # that multiple threads cannot access the data concurrently.
   @@clients = Array.new
-  @@persistence = Persistence.new
+  @@persistence = RedisPersistence.new
   @@persistence.on_receipt do |msg|
     @@clients.each { |c| c.deliver(msg) }
+  end
+
+  def self.persistence
+    return @@persistence
   end
 
   def post_init
@@ -74,4 +79,5 @@ EM.run do
 
   puts "Starting server on port #{port}..."
   EM.start_server "localhost", port, TinyChat
+  TinyChat.persistence.connect
 end

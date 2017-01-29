@@ -29,7 +29,7 @@ class TinyChatTest < Test::Unit::TestCase
 
     bob.send_msg sender: "Bob", msg: "This is history", client_time: time
     bob.send_msg sender: "Alice", msg: "This is history", client_time: time
-    alice.send_msg command: "history", client_time: 1477084767, since: time - 10000
+    alice.send_msg command: "history", client_time: 1477084767, since: 0
 
     hist = get_last_message(alice)
 
