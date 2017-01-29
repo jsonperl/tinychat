@@ -1,12 +1,13 @@
 require "test/unit"
 require "socket"
 require "json"
+require "hiredis"
 
 PORTS = [2428, 2429]
-MSGWAIT = 0.5
+MSGWAIT = 0.2
 
 Test::Unit.at_start do
-  @pids = PORTS.map{ |port| Process.spawn("PORT=#{port} ruby tinychat.rb") }
+  @pids = PORTS.map{ |port| Process.spawn("TEST=true PORT=#{port} ruby tinychat.rb") }
   sleep 1
 end
 
@@ -45,12 +46,14 @@ class TinyChatTest < Test::Unit::TestCase
   end
 
   def setup
+    cleardb!
     @connections = []
   end
 
   def teardown
     @connections.each(&:close)
     @connections.clear
+    cleardb!
   end
 
   def time
@@ -75,8 +78,16 @@ class TinyChatTest < Test::Unit::TestCase
     assert client.msgs.last == msg, "Msg not received #{msg}"
   end
 
-  def get_last_message(client)
+  def get_history_message(client)
     sleep MSGWAIT
-    client.msgs.last
+    client.msgs.detect { |m| m.is_a? Array }
+  end
+
+  def cleardb!
+    redis = Hiredis::Connection.new
+    redis.connect("127.0.0.1", 6379)
+
+    redis.write ["DEL", "tst:msgset"]
+    redis.read
   end
 end

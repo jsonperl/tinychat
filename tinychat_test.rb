@@ -29,12 +29,13 @@ class TinyChatTest < Test::Unit::TestCase
 
     bob.send_msg sender: "Bob", msg: "This is history", client_time: time
     bob.send_msg sender: "Alice", msg: "This is history", client_time: time
-    alice.send_msg command: "history", client_time: 1477084767, since: 0
+    alice.send_msg command: "history", client_time: 1477084767, since: time - 5000
 
-    hist = get_last_message(alice)
+    results = get_history_message(alice)
 
-    assert(is_match?(hist[-2], { sender: "Bob", msg: "This is history" } ))
-    assert(is_match?(hist[-1], { sender: "Alice", msg: "This is history" } ))
+    assert(results.count == 2, "History should have 2 items and has #{results.count}")
+    assert(is_match?(results[-2], { sender: "Bob", msg: "This is history" } ))
+    assert(is_match?(results[-1], { sender: "Alice", msg: "This is history" } ))
   end
 
   def test_empty_history

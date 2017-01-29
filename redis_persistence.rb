@@ -1,10 +1,14 @@
 require "em-hiredis"
 
 class RedisPersistence
+  def initialize
+    @namespace = ENV["TEST"] == "true" ? "tst:" : ""
+  end
+
   def connect
     # Local connection
     @redis = EM::Hiredis.connect
-    @redis.pubsub.subscribe("msgs") do |msg|
+    @redis.pubsub.subscribe("#{@namespace}msgs") do |msg|
       message_received(Marshal.load(msg))
     end
   end
@@ -14,13 +18,13 @@ class RedisPersistence
   end
 
   def add_message(msg)
-    @redis.publish(:msgs, Marshal.dump(msg)) # Pub/sub
-    @redis.zadd "msgset", msg["server_time"], Marshal.dump(msg)
+    @redis.publish("#{@namespace}msgs", Marshal.dump(msg)) # Pub/sub
+    @redis.zadd "#{@namespace}msgset", msg["server_time"], Marshal.dump(msg)
   end
 
   def get_history(epoch)
     raise "Requires callback" unless block_given?
-    @redis.zrangebyscore("msgset", epoch, 10000000000000) do |hist|
+    @redis.zrangebyscore("#{@namespace}msgset", epoch, 10000000000000) do |hist|
       yield hist.map{ |msg| Marshal.load(msg) }
     end
   end
