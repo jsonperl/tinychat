@@ -21,11 +21,15 @@ class TinyChat < EM::Connection
   end
 
   def post_init
-    @parser = Yajl::Parser.new
+    init_parser
     @encoder = Yajl::Encoder.new
-    @parser.on_parse_complete = method(:receive_json)
 
     @@clients.push(self)
+  end
+
+  def init_parser
+    @parser = Yajl::Parser.new
+    @parser.on_parse_complete = method(:receive_json)
   end
 
   def unbind
@@ -33,7 +37,14 @@ class TinyChat < EM::Connection
   end
 
   def receive_data(data)
-    @parser << data
+    data.split("\n").each do |part|
+      begin
+        @parser << data
+      rescue
+        # Throw the previous one out and start again
+        init_parser
+      end
+    end
   end
 
   def receive_json(msg)
